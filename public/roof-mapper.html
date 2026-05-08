@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapeador de Telhado - Sunflower</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #eeede8;
+            color: #1a1a18;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+        
+        #map {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: #f0f0f0;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card h3 {
+            font-size: 14px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #1a1a18;
+        }
+        
+        .card p {
+            font-size: 12px;
+            color: #6b6a64;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .value {
+            font-size: 24px;
+            font-weight: 900;
+            color: #3B6D11;
+            margin-bottom: 4px;
+        }
+        
+        .unit {
+            font-size: 11px;
+            color: #6b6a64;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-clear {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+        
+        .btn-clear:hover {
+            background: #fecaca;
+        }
+        
+        .btn-reset {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .btn-reset:hover {
+            background: #bfdbfe;
+        }
+        
+        .info-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 11px;
+            color: #166534;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 900;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-box li {
+            margin-bottom: 4px;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .status.ready {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+        
+        .status.loading {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+        
+        .layer-control {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .layer-btn {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .layer-btn.active {
+            background: #3B6D11;
+            color: white;
+            border-color: #3B6D11;
+        }
+        
+        .layer-btn:hover {
+            border-color: #3B6D11;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6b6a64;
+            text-align: center;
+        }
+        
+        .empty-state svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .results.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="map"></div>
+        
+        <div class="sidebar">
+            <!-- Controle de Camadas -->
+            <div class="card">
+                <h3>Camadas do Mapa</h3>
+                <div class="layer-control">
+                    <button class="layer-btn active" id="btnSatellite" onclick="switchLayer('satellite')">🛰️ Satélite</button>
+                    <button class="layer-btn" id="btnMap" onclick="switchLayer('map')">🗺️ Mapa</button>
+                </div>
+            </div>
+            
+            <!-- Ferramentas -->
+            <div class="card">
+                <h3>Ferramentas</h3>
+                <button class="btn-clear" onclick="clearDrawing()">🗑️ Limpar Desenho</button>
+                <button class="btn-reset" onclick="resetMap()">🔄 Resetar Mapa</button>
+                <div class="info-box" style="margin-top: 12px;">
+                    <strong>📍 Como usar:</strong>
+                    <ul>
+                        <li>• Clique no ícone de polígono</li>
+                        <li>• Clique nos cantos da área</li>
+                        <li>• Duplo clique para finalizar</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Resultados -->
+            <div class="card results" id="results">
+                <h3>Área Calculada</h3>
+                <div style="margin-bottom: 12px;">
+                    <p>Metros Quadrados</p>
+                    <div class="value" id="areaValue">0</div>
+                    <div class="unit">m²</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <p>Placas Solares</p>
+                    <div class="value" id="platesValue">0</div>
+                    <div class="unit">placas (2m² cada)</div>
+                </div>
+                <div>
+                    <p>Potência Estimada</p>
+                    <div class="value" id="powerValue">0</div>
+                    <div class="unit">kW (400W por placa)</div>
+                </div>
+            </div>
+            
+            <!-- Informações -->
+            <div class="card">
+                <h3>Informações</h3>
+                <div style="background: #eeede8; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                    <p>Dimensão Placa</p>
+                    <div style="font-size: 14px; font-weight: 900; color: #1a1a18;">2.0 m × 1.0 m</div>
+                </div>
+                <div style="background: #eeede8; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                    <p>Potência Placa</p>
+                    <div style="font-size: 14px; font-weight: 900; color: #1a1a18;">400 W</div>
+                </div>
+                <div style="background: #eeede8; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                    <p>Localização</p>
+                    <div style="font-size: 14px; font-weight: 900; color: #1a1a18;">-8.33°, -36.42°</div>
+                </div>
+                <div class="status loading" id="status">⏳ Carregando...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.umd.js"></script>
+
+    <script>
+        const mapCenter = [-8.33, -36.42];
+        let map, featureGroup;
+
+        // Inicializar mapa
+        function initMap() {
+            // Corrigir ícones do Leaflet
+            delete L.Icon.Default.prototype._getIconUrl;
+            L.Icon.Default.mergeOptions({
+                iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+                iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            });
+
+            // Criar mapa
+            map = L.map('map', {
+                center: mapCenter,
+                zoom: 18,
+                zoomControl: true,
+            });
+
+            // Criar camadas
+            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri',
+                maxZoom: 20,
+                minZoom: 15,
+            });
+            
+            const mapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 20,
+                minZoom: 15,
+            });
+            
+            // Adicionar satélite por padrão
+            satelliteLayer.addTo(map);
+            
+            // Guardar referências globais
+            window.mapLayers = {
+                satellite: satelliteLayer,
+                map: mapLayer,
+                current: 'satellite'
+            };
+
+            // Criar feature group
+            featureGroup = L.featureGroup().addTo(map);
+
+            // Adicionar controle de desenho
+            const drawControl = new L.Control.Draw({
+                position: 'topleft',
+                draw: {
+                    polygon: {
+                        allowIntersection: false,
+                        shapeOptions: {
+                            color: '#3B6D11',
+                            weight: 3,
+                            fillColor: '#97C459',
+                            fillOpacity: 0.4,
+                        }
+                    },
+                    rectangle: {
+                        shapeOptions: {
+                            color: '#3B6D11',
+                            weight: 3,
+                            fillColor: '#97C459',
+                            fillOpacity: 0.4,
+                        }
+                    },
+                    polyline: false,
+                    circle: false,
+                    marker: false,
+                    circlemarker: false,
+                },
+                edit: {
+                    featureGroup: featureGroup,
+                    remove: true,
+                }
+            });
+
+            map.addControl(drawControl);
+
+            // Event listeners
+            map.on(L.Draw.Event.CREATED, onDrawing);
+            map.on(L.Draw.Event.EDITED, onDrawing);
+            map.on(L.Draw.Event.DELETED, onDrawing);
+
+            // Atualizar status
+            document.getElementById('status').textContent = '✅ Pronto';
+            document.getElementById('status').className = 'status ready';
+        }
+
+        function onDrawing() {
+            const layers = featureGroup.getLayers();
+            if (layers.length === 0) {
+                document.getElementById('results').classList.remove('visible');
+                return;
+            }
+
+            let totalArea = 0;
+            layers.forEach(layer => {
+                if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+                    const latlngs = layer.getLatLngs()[0];
+                    const coords = latlngs.map(ll => [ll.lat, ll.lng]);
+                    totalArea += calculateArea(coords);
+                }
+            });
+
+            const plates = Math.floor(totalArea / 2);
+            const power = (plates * 0.4).toFixed(1);
+
+            document.getElementById('areaValue').textContent = Math.round(totalArea * 100) / 100;
+            document.getElementById('platesValue').textContent = plates;
+            document.getElementById('powerValue').textContent = power;
+            document.getElementById('results').classList.add('visible');
+        }
+
+        function calculateArea(coords) {
+            if (coords.length < 3) return 0;
+            const avgLat = coords.reduce((s, c) => s + c[0], 0) / coords.length;
+            const mLat = 111320;
+            const mLng = 111320 * Math.cos((avgLat * Math.PI) / 180);
+
+            let area = 0;
+            for (let i = 0; i < coords.length; i++) {
+                const j = (i + 1) % coords.length;
+                const x1 = coords[i][1] * mLng;
+                const y1 = coords[i][0] * mLat;
+                const x2 = coords[j][1] * mLng;
+                const y2 = coords[j][0] * mLat;
+                area += x1 * y2 - x2 * y1;
+            }
+            return Math.abs(area) / 2;
+        }
+
+        function clearDrawing() {
+            featureGroup.clearLayers();
+            document.getElementById('results').classList.remove('visible');
+        }
+
+        function resetMap() {
+            clearDrawing();
+            map.setView(mapCenter, 18);
+        }
+        
+        function switchLayer(layerType) {
+            const layers = window.mapLayers;
+            
+            if (layers.current === layerType) return;
+            
+            // Remover camada atual
+            if (layers.current === 'satellite') {
+                map.removeLayer(layers.satellite);
+            } else {
+                map.removeLayer(layers.map);
+            }
+            
+            // Adicionar nova camada
+            if (layerType === 'satellite') {
+                layers.satellite.addTo(map);
+            } else {
+                layers.map.addTo(map);
+            }
+            
+            layers.current = layerType;
+            
+            // Atualizar botões
+            document.getElementById('btnSatellite').classList.toggle('active', layerType === 'satellite');
+            document.getElementById('btnMap').classList.toggle('active', layerType === 'map');
+        }
+
+        // Inicializar quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMap);
+        } else {
+            initMap();
+        }
+        
+        // Expor funções globalmente
+        window.switchLayer = switchLayer;
+        window.clearDrawing = clearDrawing;
+        window.resetMap = resetMap;
+    </script>
+</body>
+</html>
