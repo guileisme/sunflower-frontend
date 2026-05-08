@@ -43,6 +43,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(0, 0, 0, 0.1);
             background: #f0f0f0;
+            position: relative;
         }
         
         .sidebar {
@@ -89,7 +90,7 @@
             color: #6b6a64;
         }
         
-        button {
+        .btn-tool {
             width: 100%;
             padding: 10px;
             border: none;
@@ -100,6 +101,25 @@
             transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-draw {
+            background: #3B6D11;
+            color: white;
+        }
+
+        .btn-draw:hover {
+            background: #2d540d;
+        }
+
+        .btn-draw.active {
+            background: #1a1a18;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .btn-clear {
@@ -135,15 +155,6 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 900;
-        }
-        
-        .info-box ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .info-box li {
-            margin-bottom: 4px;
         }
         
         .status {
@@ -183,34 +194,12 @@
             font-size: 11px;
             transition: all 0.3s;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
         }
         
         .layer-btn.active {
             background: #3B6D11;
             color: white;
             border-color: #3B6D11;
-        }
-        
-        .layer-btn:hover {
-            border-color: #3B6D11;
-        }
-        
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #6b6a64;
-            text-align: center;
-        }
-        
-        .empty-state svg {
-            width: 40px;
-            height: 40px;
-            margin-bottom: 12px;
-            opacity: 0.6;
         }
         
         .results {
@@ -220,14 +209,69 @@
         .results.visible {
             display: block;
         }
+
+        /* BARRA DE PESQUISA */
+        .search-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 25px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .search-item:hover {
+            background: #f8f8f8;
+        }
+
+        /* Esconder controles padrão do Leaflet Draw */
+        .leaflet-draw {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="map"></div>
+        <div id="map">
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar local...">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
         
         <div class="sidebar">
-            <!-- Controle de Camadas -->
             <div class="card">
                 <h3>Camadas do Mapa</h3>
                 <div class="layer-control">
@@ -236,22 +280,23 @@
                 </div>
             </div>
             
-            <!-- Ferramentas -->
             <div class="card">
                 <h3>Ferramentas</h3>
-                <button class="btn-clear" onclick="clearDrawing()">🗑️ Limpar Desenho</button>
-                <button class="btn-reset" onclick="resetMap()">🔄 Resetar Mapa</button>
+                <button class="btn-tool btn-draw" id="btnPolygon" onclick="toggleDraw('polygon')">⬡ Desenhar Polígono</button>
+                <button class="btn-tool btn-draw" id="btnRectangle" onclick="toggleDraw('rectangle')">▭ Desenhar Retângulo</button>
+                <button class="btn-tool btn-clear" onclick="clearDrawing()">🗑️ Limpar Desenho</button>
+                <button class="btn-tool btn-reset" onclick="resetMap()">🔄 Resetar Mapa</button>
+                
                 <div class="info-box" style="margin-top: 12px;">
                     <strong>📍 Como usar:</strong>
-                    <ul>
-                        <li>• Clique no ícone de polígono</li>
-                        <li>• Clique nos cantos da área</li>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>• Escolha uma ferramenta de desenho</li>
+                        <li>• Clique no mapa para marcar os pontos</li>
                         <li>• Duplo clique para finalizar</li>
                     </ul>
                 </div>
             </div>
             
-            <!-- Resultados -->
             <div class="card results" id="results">
                 <h3>Área Calculada</h3>
                 <div style="margin-bottom: 12px;">
@@ -271,20 +316,11 @@
                 </div>
             </div>
             
-            <!-- Informações -->
             <div class="card">
                 <h3>Informações</h3>
                 <div style="background: #eeede8; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-                    <p>Dimensão Placa</p>
-                    <div style="font-size: 14px; font-weight: 900; color: #1a1a18;">2.0 m × 1.0 m</div>
-                </div>
-                <div style="background: #eeede8; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-                    <p>Potência Placa</p>
-                    <div style="font-size: 14px; font-weight: 900; color: #1a1a18;">400 W</div>
-                </div>
-                <div style="background: #eeede8; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
                     <p>Localização</p>
-                    <div style="font-size: 14px; font-weight: 900; color: #1a1a18;">-8.33°, -36.42°</div>
+                    <div id="locationCoords" style="font-size: 14px; font-weight: 900; color: #1a1a18;">-8.33°, -36.42°</div>
                 </div>
                 <div class="status loading" id="status">⏳ Carregando...</div>
             </div>
@@ -293,121 +329,130 @@
 
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.js"></script>
 
     <script>
         const mapCenter = [-8.33, -36.42];
-        let map, featureGroup;
+        let map, featureGroup, drawHandler = null;
 
-        // Inicializar mapa
         function initMap() {
-            // Corrigir ícones do Leaflet
-            delete L.Icon.Default.prototype._getIconUrl;
-            L.Icon.Default.mergeOptions({
-                iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-                iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-            });
-
-            // Criar mapa
             map = L.map('map', {
                 center: mapCenter,
                 zoom: 18,
                 zoomControl: true,
             });
 
-            // Criar camadas
             const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri',
+                attribution: 'Esri',
                 maxZoom: 20,
-                minZoom: 15,
             });
             
             const mapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors',
+                attribution: 'OSM',
                 maxZoom: 20,
-                minZoom: 15,
             });
             
-            // Adicionar satélite por padrão
             satelliteLayer.addTo(map);
-            
-            // Guardar referências globais
-            window.mapLayers = {
-                satellite: satelliteLayer,
-                map: mapLayer,
-                current: 'satellite'
-            };
-
-            // Criar feature group
+            window.mapLayers = { satellite: satelliteLayer, map: mapLayer, current: 'satellite' };
             featureGroup = L.featureGroup().addTo(map);
 
-            // Adicionar controle de desenho
-            const drawControl = new L.Control.Draw({
-                position: 'topleft',
-                draw: {
-                    polygon: {
-                        allowIntersection: false,
-                        shapeOptions: {
-                            color: '#3B6D11',
-                            weight: 3,
-                            fillColor: '#97C459',
-                            fillOpacity: 0.4,
-                        }
-                    },
-                    rectangle: {
-                        shapeOptions: {
-                            color: '#3B6D11',
-                            weight: 3,
-                            fillColor: '#97C459',
-                            fillOpacity: 0.4,
-                        }
-                    },
-                    polyline: false,
-                    circle: false,
-                    marker: false,
-                    circlemarker: false,
-                },
-                edit: {
-                    featureGroup: featureGroup,
-                    remove: true,
-                }
+            // Configuração do Leaflet Draw (escondido)
+            map.on(L.Draw.Event.CREATED, (e) => {
+                featureGroup.addLayer(e.layer);
+                onDrawing();
+                stopDrawing();
             });
 
-            map.addControl(drawControl);
+            setupSearch();
 
-            // Event listeners
-            map.on(L.Draw.Event.CREATED, onDrawing);
-            map.on(L.Draw.Event.EDITED, onDrawing);
-            map.on(L.Draw.Event.DELETED, onDrawing);
-
-            // Atualizar status
             document.getElementById('status').textContent = '✅ Pronto';
             document.getElementById('status').className = 'status ready';
         }
 
-        function onDrawing() {
-            const layers = featureGroup.getLayers();
-            if (layers.length === 0) {
-                document.getElementById('results').classList.remove('visible');
+        function toggleDraw(type) {
+            if (drawHandler) {
+                stopDrawing();
                 return;
             }
 
+            if (type === 'polygon') {
+                drawHandler = new L.Draw.Polygon(map, {
+                    shapeOptions: { color: '#3B6D11', weight: 3, fillColor: '#97C459', fillOpacity: 0.4 }
+                });
+                document.getElementById('btnPolygon').classList.add('active');
+            } else if (type === 'rectangle') {
+                drawHandler = new L.Draw.Rectangle(map, {
+                    shapeOptions: { color: '#3B6D11', weight: 3, fillColor: '#97C459', fillOpacity: 0.4 }
+                });
+                document.getElementById('btnRectangle').classList.add('active');
+            }
+
+            drawHandler.enable();
+        }
+
+        function stopDrawing() {
+            if (drawHandler) {
+                drawHandler.disable();
+                drawHandler = null;
+            }
+            document.getElementById('btnPolygon').classList.remove('active');
+            document.getElementById('btnRectangle').classList.remove('active');
+        }
+
+        function setupSearch() {
+            const input = document.getElementById('searchInput');
+            const results = document.getElementById('searchResults');
+
+            input.addEventListener('input', debounce(async (e) => {
+                const query = e.target.value;
+                if (query.length < 3) { results.style.display = 'none'; return; }
+
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br`);
+                const data = await response.json();
+                
+                results.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'search-item';
+                        div.textContent = item.display_name;
+                        div.onclick = () => {
+                            const lat = parseFloat(item.lat);
+                            const lon = parseFloat(item.lon);
+                            map.setView([lat, lon], 18);
+                            document.getElementById('locationCoords').textContent = `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+                            results.style.display = 'none';
+                            input.value = item.display_name;
+                        };
+                        results.appendChild(div);
+                    });
+                    results.style.display = 'block';
+                }
+            }, 500));
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function onDrawing() {
+            const layers = featureGroup.getLayers();
             let totalArea = 0;
             layers.forEach(layer => {
                 if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
                     const latlngs = layer.getLatLngs()[0];
-                    const coords = latlngs.map(ll => [ll.lat, ll.lng]);
-                    totalArea += calculateArea(coords);
+                    totalArea += calculateArea(latlngs.map(ll => [ll.lat, ll.lng]));
                 }
             });
 
             const plates = Math.floor(totalArea / 2);
-            const power = (plates * 0.4).toFixed(1);
-
-            document.getElementById('areaValue').textContent = Math.round(totalArea * 100) / 100;
+            document.getElementById('areaValue').textContent = totalArea.toFixed(2);
             document.getElementById('platesValue').textContent = plates;
-            document.getElementById('powerValue').textContent = power;
+            document.getElementById('powerValue').textContent = (plates * 0.4).toFixed(1);
             document.getElementById('results').classList.add('visible');
         }
 
@@ -416,15 +461,10 @@
             const avgLat = coords.reduce((s, c) => s + c[0], 0) / coords.length;
             const mLat = 111320;
             const mLng = 111320 * Math.cos((avgLat * Math.PI) / 180);
-
             let area = 0;
             for (let i = 0; i < coords.length; i++) {
                 const j = (i + 1) % coords.length;
-                const x1 = coords[i][1] * mLng;
-                const y1 = coords[i][0] * mLat;
-                const x2 = coords[j][1] * mLng;
-                const y2 = coords[j][0] * mLat;
-                area += x1 * y2 - x2 * y1;
+                area += (coords[i][1] * mLng) * (coords[j][0] * mLat) - (coords[j][1] * mLng) * (coords[i][0] * mLat);
             }
             return Math.abs(area) / 2;
         }
@@ -432,50 +472,26 @@
         function clearDrawing() {
             featureGroup.clearLayers();
             document.getElementById('results').classList.remove('visible');
+            stopDrawing();
         }
 
         function resetMap() {
             clearDrawing();
             map.setView(mapCenter, 18);
+            document.getElementById('locationCoords').textContent = `${mapCenter[0]}°, ${mapCenter[1]}°`;
         }
         
-        function switchLayer(layerType) {
+        function switchLayer(type) {
             const layers = window.mapLayers;
-            
-            if (layers.current === layerType) return;
-            
-            // Remover camada atual
-            if (layers.current === 'satellite') {
-                map.removeLayer(layers.satellite);
-            } else {
-                map.removeLayer(layers.map);
-            }
-            
-            // Adicionar nova camada
-            if (layerType === 'satellite') {
-                layers.satellite.addTo(map);
-            } else {
-                layers.map.addTo(map);
-            }
-            
-            layers.current = layerType;
-            
-            // Atualizar botões
-            document.getElementById('btnSatellite').classList.toggle('active', layerType === 'satellite');
-            document.getElementById('btnMap').classList.toggle('active', layerType === 'map');
+            if (layers.current === type) return;
+            map.removeLayer(layers.current === 'satellite' ? layers.satellite : layers.map);
+            (type === 'satellite' ? layers.satellite : layers.map).addTo(map);
+            layers.current = type;
+            document.getElementById('btnSatellite').classList.toggle('active', type === 'satellite');
+            document.getElementById('btnMap').classList.toggle('active', type === 'map');
         }
 
-        // Inicializar quando o DOM estiver pronto
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initMap);
-        } else {
-            initMap();
-        }
-        
-        // Expor funções globalmente
-        window.switchLayer = switchLayer;
-        window.clearDrawing = clearDrawing;
-        window.resetMap = resetMap;
+        window.onload = initMap;
     </script>
 </body>
 </html>
