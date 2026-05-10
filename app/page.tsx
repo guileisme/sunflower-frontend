@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Sun, MapPin, Zap, Cloud, Wind, Thermometer, ShieldCheck, Activity 
+  Sun, MapPin, Zap, Cloud, Wind, Thermometer, ShieldCheck, Activity, Calculator, FileText 
 } from "lucide-react";
 
 import { EnergyChart } from "@/components/EnergyChart";
-import { SolarCompass } from "@/components/SolarCompass";
 import { DayCurveChart } from "@/components/DayCurveChart";
+import { AngularPerformancePanel } from "@/components/AngularPerformancePanel"; 
 
-// Função auxiliar para renderizar os ícones com cores dinâmicas e sutis
+// Função auxiliar para renderizar os ícones com cores dinâmicas
 const renderFactorIcon = (IconComponent: React.ElementType, color: string, bgColor: string, borderColor: string) => (
   <div className={`w-14 h-14 ${bgColor} ${borderColor} rounded-2xl flex items-center justify-center ${color} border shadow-sm shrink-0 transition-all`}>
     <IconComponent size={30} strokeWidth={2.5} />
@@ -27,14 +28,13 @@ export default function SunflowerDashboard() {
         day: '2-digit', month: 'short', year: 'numeric',
         hour: '2-digit', minute: '2-digit',
       }).format(agora);
-      setCurrentDateTime(formatada.replace(" de ", ". ").replace(",", " ·"));
+      setCurrentDateTime(formatada.replaceAll(" de ", ". ").replace(",", " ·"));
     };
     updateDateTime();
     const interval = setInterval(updateDateTime, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Definição dos fatores com cores coordenadas (Ícone, Fundo, Borda, Barra)
   const fatores = [
     { 
       name: "Irradiação global", val: "Alta", icon: Sun, 
@@ -85,11 +85,43 @@ export default function SunflowerDashboard() {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap gap-3">
+          
+          {/* Botão Gerar Dossiê PDF */}
+            <Link 
+            href="/relatorio" 
+            target="_blank" 
+            className="group relative flex items-center gap-2 bg-sun-text hover:bg-black text-white px-5 py-2.5 rounded-full shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20 hover:ring-2 hover:ring-offset-2 hover:ring-sun-text/60 active:scale-95 active:translate-y-0"
+          >
+            <FileText size={16} className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-110 group-hover:text-sun-amber-400" />
+            <span className="text-[11px] font-black uppercase tracking-[0.15em]">Gerar Dossiê PDF</span>
+          </Link>
+
+          {/* Botão do Simulador ROI */}
+          <Link 
+            href="/simulador/economia" 
+            className="group relative flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-full shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-900/20 hover:ring-2 hover:ring-offset-2 hover:ring-indigo-600/60 active:scale-95 active:translate-y-0"
+          >
+            <Calculator size={16} className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-110 group-hover:text-sun-amber-400" />
+            <span className="text-[11px] font-black uppercase tracking-[0.15em]">Simulador ROI</span>
+          </Link>
+
+          {/* Botão Central de Regiões */}
+          <Link 
+            href="/regions" 
+            className="group relative flex items-center gap-2.5 bg-white border border-black/10 px-5 py-2.5 rounded-full shadow-sm hover:bg-gray-50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 hover:ring-2 hover:ring-offset-2 hover:ring-slate-200 active:scale-95 active:translate-y-0"
+          >
+            <MapPin size={16} className="text-sun-green-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-110 group-hover:text-sun-amber-500" />
+            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-sun-text">Central de Regiões</span>
+          </Link>
+          
+          {/* Status Badge */}
           <div className="flex items-center gap-2.5 bg-white border border-black/10 px-5 py-2.5 rounded-full shadow-sm">
             <div className="w-2.5 h-2.5 bg-sun-green-context rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
             <span className="text-[11px] font-black uppercase tracking-[0.15em] text-sun-text">Coletando dados</span>
           </div>
+          
+          {/* Relógio Real-time */}
           <div className="bg-white border border-black/10 px-5 py-2.5 rounded-full shadow-sm min-w-50 text-center">
             <span className="text-[11px] font-black text-sun-text/80 tracking-wide uppercase">{currentDateTime || "Sincronizando..."}</span>
           </div>
@@ -148,8 +180,8 @@ export default function SunflowerDashboard() {
         ))}
       </div>
 
-      {/* ── Main Charts Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-5">
+      {/* ── Main Charts Grid (Seção de Auditoria Técnica) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-5">
         <Card className="border-black/5 shadow-sm rounded-xl bg-white">
           <CardContent className="p-6 md:p-8">
             <div className="flex items-center justify-between mb-8">
@@ -166,15 +198,11 @@ export default function SunflowerDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-black/5 shadow-sm rounded-xl bg-white">
-          <CardContent className="p-6 md:p-8 flex flex-col items-center">
-            <h3 className="text-[12px] uppercase font-black text-sun-text tracking-[0.2em] mb-6 self-start">Posição da Placa Solar</h3>
-            <SolarCompass azimuth={214} polar={38} />
-          </CardContent>
-        </Card>
+        {/* Painel de Auditoria Angular ocupando o lugar da bússola */}
+        <AngularPerformancePanel />
       </div>
 
-      {/* ── Fatores de Viabilidade (Com Cores Coordenadas) ── */}
+      {/* ── Fatores de Viabilidade ── */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {fatores.map((f, i) => (
           <div key={i} className="bg-white border border-black/5 p-4 rounded-xl shadow-sm flex items-center gap-5">
