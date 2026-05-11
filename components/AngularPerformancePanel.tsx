@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Sun, Crosshair, TrendingUp, Zap, ArrowRight } from "lucide-react";
+import { Sun, Crosshair, TrendingUp, Zap} from "lucide-react";
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,

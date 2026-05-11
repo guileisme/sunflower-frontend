@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useState } from 'react';
 import { MapPin, Calendar, TrendingUp, ChevronRight } from "lucide-react";
 
 export interface Session {
@@ -44,7 +43,7 @@ export function SessionsList({ sessions, onSelectSession, selectedIds = [] }: Se
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {sessions.map((session) => {
         const isSelected = selectedIds.includes(session.id);
         
@@ -52,65 +51,68 @@ export function SessionsList({ sessions, onSelectSession, selectedIds = [] }: Se
           <div
             key={session.id}
             onClick={() => onSelectSession?.(session)}
-            className={`p-4 rounded-lg border transition-all cursor-pointer ${
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
               isSelected
-                ? 'bg-green-50 border-green-300 shadow-md'
+                ? 'bg-green-50 border-sun-green-600 shadow-md ring-1 ring-sun-green-600'
                 : 'bg-white border-black/5 shadow-sm hover:shadow-md hover:border-black/10'
             }`}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
+              
               {/* Coluna Esquerda - Informações Principais */}
-              <div className="flex items-center gap-4 flex-1">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-sun-green-600 rounded-full flex items-center justify-center text-white shadow-md">
-                    <MapPin size={24} />
+              <div className="flex items-start gap-3 min-w-0 flex-1">
+                <div className="shrink-0 mt-0.5">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${isSelected ? 'bg-sun-green-600 text-white' : 'bg-[#eeede8] text-sun-green-600'}`}>
+                    <MapPin size={20} />
                   </div>
                 </div>
                 
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-black text-sun-text text-base">{session.region}</h3>
-                    <span className="text-xs font-bold text-[#6b6a64] bg-[#eeede8] px-2 py-0.5 rounded">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <h3 className="font-black text-sun-text text-sm truncate">{session.region}</h3>
+                    <span className="text-[9px] font-bold text-[#6b6a64] bg-[#eeede8] px-1.5 py-0.5 rounded uppercase shrink-0">
                       {session.state}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-[#6b6a64]">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} />
+                  
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#6b6a64] font-medium">
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <Calendar size={12} />
                       {session.date}
                     </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <TrendingUp size={14} />
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <TrendingUp size={12} />
                       Irradiação: {session.irradiation} kWh/m²
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Coluna Direita - Viabilidade e Status */}
-              <div className="flex items-center gap-4 flex-shrink-0">
-                <div className="text-right">
-                  <div className="text-2xl font-black text-[#15803d] leading-none">
-                    {session.viability}%
+              {/* Coluna Direita - Viabilidade e Status (Empilhados) */}
+              <div className="flex items-center gap-2 shrink-0 ml-2">
+                <div className="flex flex-col items-end gap-1.5">
+                  <div className="text-right">
+                    <div className={`text-xl font-black leading-none ${isSelected ? 'text-sun-green-600' : 'text-[#15803d]'}`}>
+                      {session.viability}%
+                    </div>
+                    <p className="text-[8px] font-bold text-[#6b6a64] uppercase tracking-wider mt-1 leading-none">
+                      Viabilidade
+                    </p>
                   </div>
-                  <p className="text-[10px] font-bold text-[#6b6a64] uppercase tracking-wider mt-1">
-                    Viabilidade
-                  </p>
+
+                  <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border whitespace-nowrap text-center ${getStatusColor(session.status)}`}>
+                    {getStatusLabel(session.status)}
+                  </div>
                 </div>
 
-                <div className={`px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border ${getStatusColor(session.status)}`}>
-                  {getStatusLabel(session.status)}
-                </div>
-
-                <ChevronRight size={20} className="text-[#6b6a64]" />
+                <ChevronRight size={18} className="text-[#6b6a64] shrink-0 ml-1" />
               </div>
             </div>
 
             {/* Barra de Progresso */}
-            <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="mt-4 h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="bg-sun-green-600 h-full transition-all"
+                className="bg-sun-green-600 h-full transition-all duration-700 ease-out"
                 style={{ width: `${session.viability}%` }}
               />
             </div>

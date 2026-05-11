@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Sun, Cloud, Wind, Thermometer, TrendingUp, MapPin } from "lucide-react";
 import { Bar } from 'react-chartjs-2';

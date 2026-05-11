@@ -1,6 +1,5 @@
 "use client";
 
-import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,7 +8,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartOptions // Importe o tipo para garantir a tipagem correta
+  ChartOptions
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 

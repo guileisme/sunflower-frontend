@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, Clock, TrendingUp, Sun, PiggyBank, Zap, BarChart3, Package, Layers, Loader2 } from "lucide-react";
 
@@ -246,27 +246,27 @@ export default function SimuladorDashboard() {
 
             {/* Cards Financeiros */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-white/60 bg-gradient-to-br from-emerald-50/90 to-teal-100/50 backdrop-blur-md shadow-lg shadow-emerald-900/5 rounded-2xl">
+              <Card className="border-white/60 bg-linear-to-br from-emerald-50/90 to-teal-100/50 backdrop-blur-md shadow-lg shadow-emerald-900/5 rounded-2xl">
                 <CardContent className="p-8 flex flex-col justify-center h-full relative overflow-hidden">
                   <div className="absolute -right-6 -top-6 text-emerald-500/10 rotate-12 pointer-events-none"><PiggyBank size={140} strokeWidth={1} /></div>
                   <div className="flex items-center gap-3 mb-6 relative z-10">
                     <div className="p-3 bg-white/80 text-emerald-600 rounded-xl shadow-sm"><PiggyBank size={24} strokeWidth={2.5} /></div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-emerald-900">Economia 1º Ano</h3>
                   </div>
-                  <p className="text-4xl xl:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-700 to-teal-500 relative z-10">
+                  <p className="text-4xl xl:text-5xl font-black bg-clip-text text-transparent bg-linear-to-r from-emerald-700 to-teal-500 relative z-10">
                     R$ {economiaAnual.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-white/60 bg-gradient-to-br from-blue-50/90 to-indigo-100/50 backdrop-blur-md shadow-lg shadow-blue-900/5 rounded-2xl">
+              <Card className="border-white/60 bg-linear-to-br from-blue-50/90 to-indigo-100/50 backdrop-blur-md shadow-lg shadow-blue-900/5 rounded-2xl">
                 <CardContent className="p-8 flex flex-col justify-center h-full relative overflow-hidden">
                   <div className="absolute -right-6 -top-6 text-blue-500/10 -rotate-12 pointer-events-none"><Clock size={140} strokeWidth={1} /></div>
                   <div className="flex items-center gap-3 mb-6 relative z-10">
                     <div className="p-3 bg-white/80 text-blue-600 rounded-xl shadow-sm"><Clock size={24} strokeWidth={2.5} /></div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-blue-900">Tempo de Payback</h3>
                   </div>
-                  <p className="text-4xl xl:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-500 relative z-10">
+                  <p className="text-4xl xl:text-5xl font-black bg-clip-text text-transparent bg-linear-to-r from-blue-700 to-indigo-500 relative z-10">
                     {paybackAnos}<span className="text-2xl"> {paybackAnos === 1 ? 'ano' : 'anos'}</span> {paybackMesesRestantes > 0 && <span className="text-2xl">e {paybackMesesRestantes} {paybackMesesRestantes === 1 ? 'mês' : 'meses'}</span>}
                   </p>
                 </CardContent>
@@ -281,7 +281,7 @@ export default function SimuladorDashboard() {
                     <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 shadow-sm"><TrendingUp size={24} strokeWidth={2.5} /></div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-indigo-900">Lucro (20 Anos)</h3>
                   </div>
-                  <p className="text-4xl lg:text-[2.5rem] font-black tracking-tighter whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-600">
+                  <p className="text-4xl lg:text-[2.5rem] font-black tracking-tighter whitespace-nowrap bg-clip-text text-transparent bg-linear-to-r from-indigo-700 to-purple-600">
                     R$ {lucroLiquido20Anos.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                   </p>
                   <p className="text-sm font-medium text-slate-500 mt-4 leading-relaxed pr-4">
@@ -298,7 +298,7 @@ export default function SimuladorDashboard() {
                       const isLucro = d.lucroLiquido >= 0;
                       return (
                         <div key={i} className="relative flex-1 flex flex-col justify-end h-full group">
-                          <div className={`w-full rounded-t-sm transition-all duration-500 ease-out cursor-pointer hover:opacity-100 opacity-80 ${isLucro ? 'bg-gradient-to-t from-indigo-600 to-indigo-400' : 'bg-gradient-to-t from-orange-400 to-red-400'}`} style={{ height: `${heightPct}%`, minHeight: isLucro ? '4px' : '0px' }} />
+                          <div className={`w-full rounded-t-sm transition-all duration-500 ease-out cursor-pointer hover:opacity-100 opacity-80 ${isLucro ? 'bg-linear-to-t from-indigo-600 to-indigo-400' : 'bg-linear-to-t from-orange-400 to-red-400'}`} style={{ height: `${heightPct}%`, minHeight: isLucro ? '4px' : '0px' }} />
                           {i % 2 === 0 && <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-400">{d.ano}</span>}
                           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-20">
                             Ano {d.ano}: R$ {Math.round(d.lucroLiquido).toLocaleString('pt-BR')}

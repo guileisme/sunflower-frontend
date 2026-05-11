@@ -1,6 +1,5 @@
 "use client";
 
-import React from 'react';
 
 export function SolarCompass({ azimuth = 214, polar = 38 }) {
   const angleRad = (azimuth - 90) * (Math.PI / 180);

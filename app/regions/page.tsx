@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Search, SlidersHorizontal, X, Satellite } from "lucide-react";
+import { MapPin, Search, SlidersHorizontal, X, Satellite, Loader2 } from "lucide-react";
 import { SessionsList, type Session } from "@/components/SessionsList";
 import { RegionComparison } from "@/components/RegionComparison";
 
@@ -13,7 +13,7 @@ export default function RegionsDashboard() {
   const [satelliteSearch, setSatelliteSearch] = useState("");
   const [isSearchingSatellite, setIsSearchingSatellite] = useState(false);
 
-  // Dados de exemplo - em produção viriam de uma API
+  // Dados de exemplo - em produção as novas buscas são adicionadas a esta lista
   const [allSessions, setAllSessions] = useState<Session[]>([
     {
       id: '1',
@@ -76,8 +76,8 @@ export default function RegionsDashboard() {
     
     setIsSearchingSatellite(true);
     try {
-      // 1. Geocoding via Nominatim
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(satelliteSearch)}&format=json&limit=1`);
+      // 1. Geocoding via Nominatim 
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(satelliteSearch)}&format=json&limit=1&email=contato@sunflowersolar.com`);
       const geoData = await geoRes.json();
       
       if (!geoData || geoData.length === 0) {
@@ -134,7 +134,7 @@ export default function RegionsDashboard() {
       
     } catch (error) {
       console.error(error);
-      alert("Erro ao buscar dados do satélite.");
+      alert("Erro ao buscar dados do satélite. Tente novamente mais tarde.");
     } finally {
       setIsSearchingSatellite(false);
     }
@@ -162,7 +162,8 @@ export default function RegionsDashboard() {
   };
 
   return (
-    <main className="w-full p-4 md:p-6 lg:p-8 space-y-5 bg-[#eeede8] min-h-screen text-sun-text font-sans">
+    <main className="w-full p-4 md:p-6 lg:p-8 space-y-5 bg-[#eeede8] min-h-screen text-sun-text font-sans pb-10">
+      
       {/* Topbar */}
       <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-black/10 pb-5 gap-4">
         <div className="flex items-center gap-3">
@@ -183,7 +184,7 @@ export default function RegionsDashboard() {
 
       {/* Seção de Filtros e Busca */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white px-4 py-3.5 rounded-lg border border-black/10 shadow-sm flex items-center gap-3">
+        <div className="bg-white px-4 py-3.5 rounded-2xl border border-black/10 shadow-sm flex items-center gap-3">
           <Search size={20} className="text-sun-green-600" />
           <input 
             type="text" 
@@ -198,7 +199,7 @@ export default function RegionsDashboard() {
           </button>
         </div>
         
-        <div className="bg-white px-4 py-3.5 rounded-lg border border-black/10 shadow-sm flex items-center gap-3">
+        <div className="bg-white px-4 py-3.5 rounded-2xl border border-black/10 shadow-sm flex items-center gap-3">
           <Satellite size={20} className="text-blue-600" />
           <input 
             type="text" 
@@ -211,41 +212,38 @@ export default function RegionsDashboard() {
           <button 
             onClick={handleSatelliteSearch}
             disabled={isSearchingSatellite}
-            className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full font-black text-[11px] uppercase tracking-wider border border-blue-200 hover:bg-blue-200 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-black transition-colors disabled:opacity-50"
           >
-            {isSearchingSatellite ? 'Buscando...' : 'Via Satélite'}
+            {isSearchingSatellite ? <Loader2 className="animate-spin" size={14} /> : 'Via Satélite'}
           </button>
         </div>
       </div>
 
-      {/* Informação de Seleção */}
-      {selectedSessions.length > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
-          <p className="font-bold text-[#15803d]">
-            {selectedSessions.length} região(ões) selecionada(s) para comparação
-          </p>
-          <button
-            onClick={handleClearSelection}
-            className="flex items-center gap-2 bg-white text-[#15803d] px-3 py-1 rounded-full text-xs font-bold border border-green-200 hover:bg-green-100 transition-colors"
-          >
-            <X size={14} />
-            Limpar
-          </button>
-        </div>
-      )}
-
       {/* Grid Principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-5 items-start">
+        
         {/* Coluna Esquerda - Lista de Sessões */}
-        <div>
-          <Card className="border-black/10 shadow-md rounded-xl overflow-hidden bg-white">
+        <div className="md:sticky md:top-8 z-10">
+          <Card className="border-black/10 shadow-md rounded-2xl overflow-hidden bg-white">
             <CardContent className="p-6">
-              <h2 className="text-lg font-black text-sun-text mb-4">
-                Sessões de Análise
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-black text-sun-text">
+                  Sessões de Análise
+                </h2>
+                {selectedSessions.length > 0 && (
+                  <button
+                    onClick={handleClearSelection}
+                    className="flex items-center gap-1 text-red-500 hover:bg-red-50 px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-colors"
+                  >
+                    <X size={12} /> Limpar
+                  </button>
+                )}
+              </div>
+              
               <p className="text-xs text-[#6b6a64] mb-4 font-bold">
                 Clique em duas regiões para comparar
               </p>
+              
               <SessionsList
                 sessions={filteredSessions}
                 onSelectSession={handleSelectSession}
@@ -256,7 +254,7 @@ export default function RegionsDashboard() {
         </div>
 
         {/* Coluna Direita - Comparação */}
-        <div>
+        <div className="w-full">
           {selectedSessions.length === 2 ? (
             <RegionComparison
               region1={selectedRegions[0] ? {
@@ -266,9 +264,9 @@ export default function RegionsDashboard() {
                 date: selectedRegions[0].date,
                 viability: selectedRegions[0].viability,
                 irradiation: selectedRegions[0].irradiation,
-                temperature: selectedRegions[0].temperature || 32,
-                cloudiness: selectedRegions[0].cloudiness || 15,
-                wind: selectedRegions[0].wind || 12,
+                temperature: selectedRegions[0].temperature ?? 32,
+                cloudiness: selectedRegions[0].cloudiness ?? 15,
+                wind: selectedRegions[0].wind ?? 12,
                 roi: '4.2 anos'
               } : undefined}
               region2={selectedRegions[1] ? {
@@ -278,53 +276,51 @@ export default function RegionsDashboard() {
                 date: selectedRegions[1].date,
                 viability: selectedRegions[1].viability,
                 irradiation: selectedRegions[1].irradiation,
-                temperature: selectedRegions[1].temperature || 30,
-                cloudiness: selectedRegions[1].cloudiness || 22,
-                wind: selectedRegions[1].wind || 14,
+                temperature: selectedRegions[1].temperature ?? 30,
+                cloudiness: selectedRegions[1].cloudiness ?? 22,
+                wind: selectedRegions[1].wind ?? 14,
                 roi: '4.8 anos'
               } : undefined}
             />
           ) : (
-            <Card className="border-black/10 shadow-md rounded-xl overflow-hidden bg-white h-full">
-              <CardContent className="p-6 flex flex-col items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MapPin size={32} className="text-sun-green-600" />
-                  </div>
-                  <h3 className="text-lg font-black text-sun-text mb-2">Selecione duas regiões</h3>
-                  <p className="text-[#6b6a64] font-bold max-w-xs">
-                    Clique em duas sessões de análise na lista ao lado para visualizar a comparação de potencial solar.
-                  </p>
+            <Card className="border-black/10 shadow-md rounded-2xl bg-white h-full min-h-125 flex items-center justify-center border-dashed border-2">
+              <div className="text-center p-10">
+                <div className="w-20 h-20 bg-[#f9f9f7] rounded-full flex items-center justify-center mx-auto mb-6">
+                   <SlidersHorizontal size={40} className="text-[#6b6a64] opacity-20" />
                 </div>
-              </CardContent>
+                <h3 className="text-xl font-black text-sun-text mb-2">Modo Comparativo</h3>
+                <p className="text-xs font-bold text-[#6b6a64] uppercase tracking-[0.2em] max-w-70 mx-auto leading-relaxed">
+                  Selecione exatamente <span className="text-sun-green-600 underline">duas cidades</span> na lista ao lado para cruzar os dados técnicos.
+                </p>
+              </div>
             </Card>
           )}
         </div>
       </div>
 
       {/* Resumo de Estatísticas */}
-      <Card className="border-black/10 shadow-md rounded-xl bg-white">
+      <Card className="border-black/10 shadow-md rounded-2xl bg-white">
         <CardContent className="p-6">
           <h2 className="text-lg font-black text-sun-text mb-4">Resumo de Regiões Analisadas</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-[#eeede8] p-4 rounded-lg border border-black/5">
-              <p className="text-xs font-bold uppercase text-[#6b6a64] mb-1">Total de Regiões</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-[#eeede8] p-5 rounded-xl border border-black/5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#6b6a64] mb-1">Total de Regiões</p>
               <p className="text-3xl font-black text-sun-text">{allSessions.length}</p>
             </div>
-            <div className="bg-[#eeede8] p-4 rounded-lg border border-black/5">
-              <p className="text-xs font-bold uppercase text-[#6b6a64] mb-1">Viabilidade Média</p>
+            <div className="bg-[#eeede8] p-5 rounded-xl border border-black/5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#6b6a64] mb-1">Viabilidade Média</p>
               <p className="text-3xl font-black text-[#15803d]">
                 {Math.round(allSessions.reduce((sum, s) => sum + s.viability, 0) / allSessions.length)}%
               </p>
             </div>
-            <div className="bg-[#eeede8] p-4 rounded-lg border border-black/5">
-              <p className="text-xs font-bold uppercase text-[#6b6a64] mb-1">Melhor Viabilidade</p>
+            <div className="bg-[#eeede8] p-5 rounded-xl border border-black/5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#6b6a64] mb-1">Melhor Viabilidade</p>
               <p className="text-3xl font-black text-sun-green-600">
                 {Math.max(...allSessions.map(s => s.viability))}%
               </p>
             </div>
-            <div className="bg-[#eeede8] p-4 rounded-lg border border-black/5">
-              <p className="text-xs font-bold uppercase text-[#6b6a64] mb-1">Irradiação Média</p>
+            <div className="bg-[#eeede8] p-5 rounded-xl border border-black/5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#6b6a64] mb-1">Irradiação Média</p>
               <p className="text-3xl font-black text-sun-green-600">
                 {(allSessions.reduce((sum, s) => sum + s.irradiation, 0) / allSessions.length).toFixed(1)}
               </p>

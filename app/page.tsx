@@ -65,12 +65,11 @@ export default function SunflowerDashboard() {
   return (
     <main className="w-full p-4 md:p-6 lg:p-8 space-y-5 bg-[#eeede8] min-h-screen text-sun-text font-sans pb-10">
       
-      {/* ── NAVBAR PROFISSIONAL INTEGRADA ── */}
       <nav className="w-full mb-8">
         <div className="max-w-full mx-auto bg-white/90 backdrop-blur-md border border-white shadow-xl rounded-3xl p-2 flex flex-col md:flex-row items-center justify-between gap-4">
           
           {/* Lado Esquerdo: Identidade Visual */}
-          <div className="flex items-center gap-4 px-4 border-r border-black/5 hidden lg:flex">
+          <div className="flex items-center gap-4 px-4 border-r border-black/5 lg:flex">
             <div className="w-10 h-10 bg-sun-green-600 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-3 transition-transform hover:rotate-0">
               <Zap size={22} className="text-sun-amber-400" fill="currentColor" />
             </div>

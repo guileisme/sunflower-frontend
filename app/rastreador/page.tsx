@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
-  Sun,
   Crosshair,
   Zap,
   Wifi,
@@ -11,7 +10,6 @@ import {
   Trophy,
   RotateCcw,
   Activity,
-  ChevronRight,
   ArrowLeft,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

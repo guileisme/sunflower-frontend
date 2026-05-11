@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 
-// Importando a Montserrat com pesos bem fortes
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
-  weight: ["400", "500", "700", "800", "900"], // O 900 (Black) é o que vai dar o destaque
+  weight: ["400", "500", "700", "800", "900"], 
 });
 
 export const metadata: Metadata = {
