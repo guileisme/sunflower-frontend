@@ -3,16 +3,18 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Search, SlidersHorizontal, X } from "lucide-react";
+import { MapPin, Search, SlidersHorizontal, X, Satellite } from "lucide-react";
 import { SessionsList, type Session } from "@/components/SessionsList";
 import { RegionComparison } from "@/components/RegionComparison";
 
 export default function RegionsDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
+  const [satelliteSearch, setSatelliteSearch] = useState("");
+  const [isSearchingSatellite, setIsSearchingSatellite] = useState(false);
 
   // Dados de exemplo - em produção viriam de uma API
-  const allSessions: Session[] = [
+  const [allSessions, setAllSessions] = useState<Session[]>([
     {
       id: '1',
       region: 'Belo Jardim',
@@ -67,7 +69,76 @@ export default function RegionsDashboard() {
       irradiation: 6.9,
       status: 'excellent'
     },
-  ];
+  ]);
+
+  const handleSatelliteSearch = async () => {
+    if (!satelliteSearch.trim()) return;
+    
+    setIsSearchingSatellite(true);
+    try {
+      // 1. Geocoding via Nominatim
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(satelliteSearch)}&format=json&limit=1`);
+      const geoData = await geoRes.json();
+      
+      if (!geoData || geoData.length === 0) {
+        alert("Endereço não encontrado.");
+        setIsSearchingSatellite(false);
+        return;
+      }
+      
+      const { lat, lon, display_name } = geoData[0];
+      const addressParts = display_name.split(", ");
+      const region = addressParts[0];
+      const state = addressParts.length > 2 ? addressParts[addressParts.length - 2] : "BR";
+
+      // 2. Weather & Solar via Open-Meteo
+      const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,cloud_cover,wind_speed_10m&daily=shortwave_radiation_sum&timezone=auto`);
+      const weatherData = await weatherRes.json();
+      
+      const current = weatherData.current || {};
+      const daily = weatherData.daily || {};
+      
+      const temperature = current.temperature_2m || 30;
+      const cloudiness = current.cloud_cover || 20;
+      const wind = current.wind_speed_10m || 10;
+      
+      let irradiation = 5.5; 
+      if (daily.shortwave_radiation_sum && daily.shortwave_radiation_sum.length > 0) {
+        // MJ/m² to kWh/m² conversion
+        irradiation = Number((daily.shortwave_radiation_sum[0] / 3.6).toFixed(1));
+      }
+      
+      let viability = 70;
+      let status: Session['status'] = 'good';
+      
+      if (irradiation > 6.5) { viability = Math.floor(Math.random() * 10) + 90; status = 'excellent'; }
+      else if (irradiation > 5.0) { viability = Math.floor(Math.random() * 15) + 75; status = 'good'; }
+      else if (irradiation > 4.0) { viability = Math.floor(Math.random() * 15) + 60; status = 'moderate'; }
+      else { viability = Math.floor(Math.random() * 20) + 40; status = 'poor'; }
+
+      const newSession: Session = {
+        id: Date.now().toString(),
+        region,
+        state,
+        date: new Date().toLocaleDateString('pt-BR'),
+        viability,
+        irradiation,
+        status,
+        temperature,
+        cloudiness,
+        wind
+      };
+
+      setAllSessions(prev => [newSession, ...prev]);
+      setSatelliteSearch("");
+      
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao buscar dados do satélite.");
+    } finally {
+      setIsSearchingSatellite(false);
+    }
+  };
 
   // Filtrar sessões baseado na busca
   const filteredSessions = allSessions.filter(session =>
@@ -111,19 +182,40 @@ export default function RegionsDashboard() {
       </header>
 
       {/* Seção de Filtros e Busca */}
-      <div className="bg-white px-4 py-3.5 rounded-lg border border-black/10 shadow-sm flex items-center gap-3">
-        <Search size={20} className="text-sun-green-600" />
-        <input 
-          type="text" 
-          placeholder="Buscar por região ou estado..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 bg-transparent outline-none font-medium text-sun-text placeholder:text-[#6b6a64]"
-        />
-        <button className="flex items-center gap-2 bg-green-100 text-[#15803d] px-4 py-1.5 rounded-full font-black text-[11px] uppercase tracking-wider border border-green-200 hover:bg-green-200 transition-colors">
-          <SlidersHorizontal size={16} />
-          Filtros
-        </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white px-4 py-3.5 rounded-lg border border-black/10 shadow-sm flex items-center gap-3">
+          <Search size={20} className="text-sun-green-600" />
+          <input 
+            type="text" 
+            placeholder="Filtrar regiões na lista..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-transparent outline-none font-medium text-sun-text placeholder:text-[#6b6a64]"
+          />
+          <button className="flex items-center gap-2 bg-green-100 text-[#15803d] px-4 py-1.5 rounded-full font-black text-[11px] uppercase tracking-wider border border-green-200 hover:bg-green-200 transition-colors">
+            <SlidersHorizontal size={16} />
+            Filtros
+          </button>
+        </div>
+        
+        <div className="bg-white px-4 py-3.5 rounded-lg border border-black/10 shadow-sm flex items-center gap-3">
+          <Satellite size={20} className="text-blue-600" />
+          <input 
+            type="text" 
+            placeholder="Buscar CEP ou Cidade para nova análise..."
+            value={satelliteSearch}
+            onChange={(e) => setSatelliteSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSatelliteSearch()}
+            className="flex-1 bg-transparent outline-none font-medium text-sun-text placeholder:text-[#6b6a64]"
+          />
+          <button 
+            onClick={handleSatelliteSearch}
+            disabled={isSearchingSatellite}
+            className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full font-black text-[11px] uppercase tracking-wider border border-blue-200 hover:bg-blue-200 transition-colors disabled:opacity-50"
+          >
+            {isSearchingSatellite ? 'Buscando...' : 'Via Satélite'}
+          </button>
+        </div>
       </div>
 
       {/* Informação de Seleção */}
@@ -174,9 +266,9 @@ export default function RegionsDashboard() {
                 date: selectedRegions[0].date,
                 viability: selectedRegions[0].viability,
                 irradiation: selectedRegions[0].irradiation,
-                temperature: 32,
-                cloudiness: 15,
-                wind: 12,
+                temperature: selectedRegions[0].temperature || 32,
+                cloudiness: selectedRegions[0].cloudiness || 15,
+                wind: selectedRegions[0].wind || 12,
                 roi: '4.2 anos'
               } : undefined}
               region2={selectedRegions[1] ? {
@@ -186,9 +278,9 @@ export default function RegionsDashboard() {
                 date: selectedRegions[1].date,
                 viability: selectedRegions[1].viability,
                 irradiation: selectedRegions[1].irradiation,
-                temperature: 30,
-                cloudiness: 22,
-                wind: 14,
+                temperature: selectedRegions[1].temperature || 30,
+                cloudiness: selectedRegions[1].cloudiness || 22,
+                wind: selectedRegions[1].wind || 14,
                 roi: '4.8 anos'
               } : undefined}
             />
