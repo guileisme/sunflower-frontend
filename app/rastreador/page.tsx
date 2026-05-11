@@ -486,7 +486,7 @@ export default function RastreadorPage() {
                 {pct}% do pico
               </p>
             </div>
-            <div className="bg-white border border-green-200 p-5 rounded-xl shadow-sm flex flex-col justify-center bg-green-50/30">
+            <div className="bg-white border border-green-200 p-5 rounded-xl shadow-sm flex flex-col justify-center">
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#6b6a64] mb-1">
                 🏆 Melhor Tensão
               </p>
@@ -508,7 +508,7 @@ export default function RastreadorPage() {
                 Polar: {data.polar}°
               </p>
             </div>
-            <div className="bg-white border border-amber-200 p-5 rounded-xl shadow-sm flex flex-col justify-center bg-amber-50/30">
+            <div className="bg-white border border-amber-200 p-5 rounded-xl shadow-sm flex flex-col justify-center">
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#6b6a64] mb-1">
                 🎯 Melhor Ângulo
               </p>
@@ -540,7 +540,7 @@ export default function RastreadorPage() {
             </Card>
 
             {/* Card destaque do melhor ângulo */}
-            <Card className="border-green-200 shadow-md rounded-xl bg-gradient-to-br from-green-50 to-white overflow-hidden">
+            <Card className="border-green-200 shadow-md rounded-xl bg-linear-to-br from-green-50 to-white overflow-hidden">
               <CardContent className="p-6 flex flex-col items-center gap-4 h-full justify-center text-center">
                 <div className="w-16 h-16 bg-sun-green-600 rounded-full flex items-center justify-center text-sun-amber-400 shadow-lg">
                   <Trophy size={36} />
@@ -657,7 +657,7 @@ export default function RastreadorPage() {
               <h3 className="text-[11px] uppercase font-black text-sun-text tracking-[0.2em] mb-3">
                 Log de Conexão
               </h3>
-              <div className="bg-[#1a1a18] rounded-xl p-4 font-mono text-[11px] text-green-400 space-y-1 min-h-[80px]">
+              <div className="bg-sun-text rounded-xl p-4 font-mono text-[11px] text-green-400 space-y-1 min-h-20">
                 {log.map((l, i) => (
                   <div key={i}>{l}</div>
                 ))}

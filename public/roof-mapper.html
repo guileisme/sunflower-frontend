@@ -1,497 +1,464 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapeador de Telhado - Sunflower</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.min.css" />
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: #eeede8;
-            color: #1a1a18;
-        }
-        
-        .container {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 20px;
-            padding: 20px;
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-        }
-        
-        #map {
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            background: #f0f0f0;
-            position: relative;
-        }
-        
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-            padding: 10px;
-        }
-        
-        .card {
-            background: white;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .card h3 {
-            font-size: 14px;
-            font-weight: 900;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #1a1a18;
-        }
-        
-        .card p {
-            font-size: 12px;
-            color: #6b6a64;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        .value {
-            font-size: 24px;
-            font-weight: 900;
-            color: #3B6D11;
-            margin-bottom: 4px;
-        }
-        
-        .unit {
-            font-size: 11px;
-            color: #6b6a64;
-        }
-        
-        .btn-tool {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapeador de Telhado Solar</title>
 
-        .btn-draw {
-            background: #3B6D11;
-            color: white;
-        }
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 
-        .btn-draw:hover {
-            background: #2d540d;
-        }
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .btn-draw.active {
-            background: #1a1a18;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .btn-clear {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
-        }
-        
-        .btn-clear:hover {
-            background: #fecaca;
-        }
-        
-        .btn-reset {
-            background: #dbeafe;
-            color: #1e40af;
-            border: 1px solid #bfdbfe;
-        }
-        
-        .btn-reset:hover {
-            background: #bfdbfe;
-        }
-        
-        .info-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 11px;
-            color: #166534;
-        }
-        
-        .info-box strong {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 900;
-        }
-        
-        .status {
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 12px;
-        }
-        
-        .status.ready {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #166534;
-        }
-        
-        .status.loading {
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-            color: #92400e;
-        }
-        
-        .layer-control {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        
-        .layer-btn {
-            flex: 1;
-            padding: 8px;
-            border: 2px solid #ddd;
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 11px;
-            transition: all 0.3s;
-            text-transform: uppercase;
-        }
-        
-        .layer-btn.active {
-            background: #3B6D11;
-            color: white;
-            border-color: #3B6D11;
-        }
-        
-        .results {
-            display: none;
-        }
-        
-        .results.visible {
-            display: block;
-        }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f0ec;
+      height: 100vh; /* Altura exata da tela */
+      overflow: hidden; /* Remove barra de scroll */
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
 
-        /* BARRA DE PESQUISA */
-        .search-container {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            width: 80%;
-            max-width: 400px;
-        }
+    h1 {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #3B6D11;
+      margin-bottom: 15px;
+      flex-shrink: 0; /* Impede o título de encolher */
+    }
 
-        .search-input {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 25px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            font-family: 'Montserrat', sans-serif;
-            font-size: 14px;
-            outline: none;
-        }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      flex-grow: 1; /* Faz o layout ocupar o resto da altura */
+      min-height: 0; /* Necessário para o grid respeitar o flex-grow */
+    }
 
-        .search-results {
-            position: absolute;
-            top: 50px;
-            left: 0;
-            right: 0;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
+    /* MAP CARD */
+    .map-card {
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.07);
+      position: relative;
+      height: 100%; /* Ocupa toda a altura da coluna do grid */
+    }
 
-        .search-item {
-            padding: 10px 16px;
-            cursor: pointer;
-            font-size: 13px;
-            border-bottom: 1px solid #f0f0f0;
-        }
+    #map {
+      width: 100%;
+      height: 100%; /* Mapa preenche todo o card agora */
+      background: #e0e0e0; /* Fundo cinza enquanto carrega */
+    }
 
-        .search-item:hover {
-            background: #f8f8f8;
-        }
+    /* SEARCH BAR */
+    .search-container {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: 75%;
+      max-width: 420px;
+    }
 
-        /* Esconder controles padrão do Leaflet Draw */
-        .leaflet-draw {
-            display: none !important;
-        }
-    </style>
+    .search-input {
+      width: 100%;
+      padding: 11px 18px;
+      border-radius: 25px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.13);
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+      background: white;
+    }
+
+    .search-results {
+      position: absolute;
+      top: 46px;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.13);
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .search-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+    .search-item:hover { background: #f8f8f6; }
+    .search-item:last-child { border-bottom: none; }
+
+    .leaflet-draw { display: none !important; }
+
+    /* SIDEBAR */
+    .sidebar { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+      overflow-y: auto; /* Scroll apenas na sidebar se necessário */
+      padding-right: 5px;
+    }
+    /* Estilização da scrollbar da sidebar */
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border: 1px solid rgba(0,0,0,0.07);
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 12px;
+    }
+
+    /* LAYER TOGGLE */
+    .layer-control {
+      display: flex;
+      gap: 8px;
+    }
+    .layer-btn {
+      flex: 1;
+      padding: 9px;
+      border: 2px solid #ddd;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 11px;
+      text-transform: uppercase;
+      transition: all 0.15s;
+    }
+    .layer-btn.active {
+      background: #3B6D11;
+      color: white;
+      border-color: #3B6D11;
+    }
+
+    /* BUTTONS */
+    .btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, transform 0.1s;
+      margin-bottom: 8px;
+    }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-polygon  { background: #3B6D11; color: white; }
+    .btn-polygon.active { background: #1a1a18; }
+    .btn-rect { background: #4c8c16; color: white; }
+    .btn-rect.active { background: #1a1a18; }
+    .btn-clear { background: #fff0f0; color: #d93025; border: 1px solid #ffd5d2; }
+    .btn-reset { background: #f0f5ff; color: #1a6ef5; border: 1px solid #c9daff; }
+
+    .how-to {
+      margin-top: 8px;
+      background: #f0f7e8;
+      border: 1px solid #c8e6a0;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .how-to strong { font-size: 11px; font-weight: 900; color: #3B6D11; display: block; margin-bottom: 4px; }
+    .how-to li { font-size: 11px; color: #4a7a18; line-height: 1.6; list-style: none; }
+    .how-to li::before { content: "• "; }
+
+    .result-card {
+      background: linear-gradient(135deg, #f0f7e8, white);
+      border: 1px solid #c8e6a0;
+      display: none;
+    }
+    .result-card.visible { display: block; }
+
+    .metric {
+      background: white;
+      border: 1px solid #dff0c4;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .metric-label { font-size: 9px; font-weight: 900; text-transform: uppercase; color: #888; }
+    .metric-value-green  { font-size: 32px; font-weight: 900; color: #3B6D11; }
+    .metric-value-orange { font-size: 32px; font-weight: 900; color: #e07b00; }
+    .metric-value-blue   { font-size: 32px; font-weight: 900; color: #1a6ef5; }
+    .metric-unit { font-size: 10px; font-weight: 700; color: #999; }
+
+    .info-row {
+      background: #f9f9f7;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+    }
+    .info-label { font-size: 9px; font-weight: 900; text-transform: uppercase; color: #999; }
+    .info-value { font-size: 12px; font-weight: 900; color: #333; }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 8px;
+      padding: 8px 12px;
+      border: 1px solid;
+    }
+    .status-ready { background: #f0f7e8; border-color: #c8e6a0; color: #3B6D11; }
+    .status-loading { background: #fffbea; border-color: #ffe58a; color: #b07d00; }
+    .status-label { font-size: 9px; font-weight: 900; text-transform: uppercase; }
+    .status-badge { font-size: 11px; font-weight: 900; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div id="map">
-            <div class="search-container">
-                <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar local...">
-                <div class="search-results" id="searchResults"></div>
-            </div>
-        </div>
-        
-        <div class="sidebar">
-            <div class="card">
-                <h3>Camadas do Mapa</h3>
-                <div class="layer-control">
-                    <button class="layer-btn active" id="btnSatellite" onclick="switchLayer('satellite')">🛰️ Satélite</button>
-                    <button class="layer-btn" id="btnMap" onclick="switchLayer('map')">🗺️ Mapa</button>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h3>Ferramentas</h3>
-                <button class="btn-tool btn-draw" id="btnPolygon" onclick="toggleDraw('polygon')">⬡ Desenhar Polígono</button>
-                <button class="btn-tool btn-draw" id="btnRectangle" onclick="toggleDraw('rectangle')">▭ Desenhar Retângulo</button>
-                <button class="btn-tool btn-clear" onclick="clearDrawing()">🗑️ Limpar Desenho</button>
-                <button class="btn-tool btn-reset" onclick="resetMap()">🔄 Resetar Mapa</button>
-                
-                <div class="info-box" style="margin-top: 12px;">
-                    <strong>📍 Como usar:</strong>
-                    <ul style="list-style: none; padding-left: 0;">
-                        <li>• Escolha uma ferramenta de desenho</li>
-                        <li>• Clique no mapa para marcar os pontos</li>
-                        <li>• Duplo clique para finalizar</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="card results" id="results">
-                <h3>Área Calculada</h3>
-                <div style="margin-bottom: 12px;">
-                    <p>Metros Quadrados</p>
-                    <div class="value" id="areaValue">0</div>
-                    <div class="unit">m²</div>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <p>Placas Solares</p>
-                    <div class="value" id="platesValue">0</div>
-                    <div class="unit">placas (2m² cada)</div>
-                </div>
-                <div>
-                    <p>Potência Estimada</p>
-                    <div class="value" id="powerValue">0</div>
-                    <div class="unit">kW (400W por placa)</div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h3>Informações</h3>
-                <div style="background: #eeede8; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-                    <p>Localização</p>
-                    <div id="locationCoords" style="font-size: 14px; font-weight: 900; color: #1a1a18;">-8.33°, -36.42°</div>
-                </div>
-                <div class="status loading" id="status">⏳ Carregando...</div>
-            </div>
-        </div>
+
+<h1>☀️ Mapeador de Telhado Solar</h1>
+
+<div class="layout">
+  <div class="map-card">
+    <div class="search-container">
+      <input type="text" class="search-input" id="searchInput" placeholder="🔍 Pesquisar endereço..." />
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <div class="sidebar">
+    <div class="card">
+      <p class="card-title">Camadas do Mapa</p>
+      <div class="layer-control">
+        <button class="layer-btn active" id="btn-satellite" onclick="switchLayer('satellite')">🛰️ Satélite</button>
+        <button class="layer-btn" id="btn-map" onclick="switchLayer('map')">🗺️ Mapa</button>
+      </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.js"></script>
+    <div class="card">
+      <p class="card-title">Ferramentas</p>
+      <button class="btn btn-polygon" id="btn-polygon" onclick="toggleDraw('polygon')">⬡ Desenhar Polígono</button>
+      <button class="btn btn-rect" id="btn-rect" onclick="toggleDraw('rectangle')">▭ Desenhar Retângulo</button>
+      <button class="btn btn-clear" onclick="limpar()">🗑 Limpar Desenho</button>
+      <button class="btn btn-reset" onclick="resetar()">↺ Resetar Mapa</button>
+      <div class="how-to">
+        <div class="how-to">
+        <strong>📍 Passo a Passo:</strong>
+        <ul>
+            <li>Selecione uma ferramenta de desenho (Polígono ou Retângulo).</li>
+            <li>Clique no mapa para marcar os vértices (cantos) da área útil.</li>
+        </ul>
+        </div>
 
-    <script>
-        const mapCenter = [-8.33, -36.42];
-        let map, featureGroup, drawHandler = null;
+    <div class="card result-card" id="results-section">
+      <p class="card-title">Resultados</p>
+      <div class="metric">
+        <p class="metric-label">Área Útil</p>
+        <p class="metric-value-green" id="area-value">0</p>
+        <p class="metric-unit">m²</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Capacidade Estimada</p>
+        <p class="metric-value-orange" id="plates-value">0</p>
+        <p class="metric-unit">placas solares</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Potência Estimada</p>
+        <p class="metric-value-blue" id="power-value">0</p>
+        <p class="metric-unit">kWp</p>
+      </div>
+    </div>
 
-        function initMap() {
-            map = L.map('map', {
-                center: mapCenter,
-                zoom: 18,
-                zoomControl: true,
-            });
+    <div class="card">
+      <p class="card-title">Informações</p>
+      <div class="info-row">
+        <p class="info-label">Localização Atual</p>
+        <p class="info-value" id="coords-value">-8.33°, -36.42°</p>
+      </div>
+      <div class="status-row status-loading" id="status-row">
+        <span class="status-label">Status</span>
+        <span class="status-badge" id="status-badge">⏳ Carregando...</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Esri',
-                maxZoom: 20,
-            });
-            
-            const mapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: 'OSM',
-                maxZoom: 20,
-            });
-            
-            satelliteLayer.addTo(map);
-            window.mapLayers = { satellite: satelliteLayer, map: mapLayer, current: 'satellite' };
-            featureGroup = L.featureGroup().addTo(map);
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 
-            // Configuração do Leaflet Draw (escondido)
-            map.on(L.Draw.Event.CREATED, (e) => {
-                featureGroup.addLayer(e.layer);
-                onDrawing();
-                stopDrawing();
-            });
+<script>
+  const MAP_CENTER = [-8.33, -36.42];
+  let map, featureGroup, drawHandler = null;
+  let satelliteLayer, osmLayer, currentLayer = 'satellite';
 
-            setupSearch();
+  function initMap() {
+    map = L.map('map', { center: MAP_CENTER, zoom: 18, zoomControl: true });
 
-            document.getElementById('status').textContent = '✅ Pronto';
-            document.getElementById('status').className = 'status ready';
-        }
+    satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Esri', maxZoom: 20
+    });
+    osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'OSM', maxZoom: 20
+    });
 
-        function toggleDraw(type) {
-            if (drawHandler) {
-                stopDrawing();
-                return;
-            }
+    satelliteLayer.addTo(map);
+    featureGroup = L.featureGroup().addTo(map);
 
-            if (type === 'polygon') {
-                drawHandler = new L.Draw.Polygon(map, {
-                    shapeOptions: { color: '#3B6D11', weight: 3, fillColor: '#97C459', fillOpacity: 0.4 }
-                });
-                document.getElementById('btnPolygon').classList.add('active');
-            } else if (type === 'rectangle') {
-                drawHandler = new L.Draw.Rectangle(map, {
-                    shapeOptions: { color: '#3B6D11', weight: 3, fillColor: '#97C459', fillOpacity: 0.4 }
-                });
-                document.getElementById('btnRectangle').classList.add('active');
-            }
+    // IMPORTANTE: Força o mapa a preencher a área e remover espaços em branco
+    setTimeout(() => { map.invalidateSize(); }, 200);
 
-            drawHandler.enable();
-        }
+    const drawControl = new L.Control.Draw({ draw: false, edit: { featureGroup, remove: true } });
+    map.addControl(drawControl);
 
-        function stopDrawing() {
-            if (drawHandler) {
-                drawHandler.disable();
-                drawHandler = null;
-            }
-            document.getElementById('btnPolygon').classList.remove('active');
-            document.getElementById('btnRectangle').classList.remove('active');
-        }
+    map.on(L.Draw.Event.CREATED, (e) => {
+      featureGroup.addLayer(e.layer);
+      atualizar();
+      stopDrawing();
+    });
+    map.on(L.Draw.Event.EDITED, atualizar);
+    map.on(L.Draw.Event.DELETED, atualizar);
 
-        function setupSearch() {
-            const input = document.getElementById('searchInput');
-            const results = document.getElementById('searchResults');
+    setupSearch();
 
-            input.addEventListener('input', debounce(async (e) => {
-                const query = e.target.value;
-                if (query.length < 3) { results.style.display = 'none'; return; }
+    document.getElementById('status-row').classList.replace('status-loading', 'status-ready');
+    document.getElementById('status-badge').textContent = '✅ Pronto';
+  }
 
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br`);
-                const data = await response.json();
-                
-                results.innerHTML = '';
-                if (data.length > 0) {
-                    data.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'search-item';
-                        div.textContent = item.display_name;
-                        div.onclick = () => {
-                            const lat = parseFloat(item.lat);
-                            const lon = parseFloat(item.lon);
-                            map.setView([lat, lon], 18);
-                            document.getElementById('locationCoords').textContent = `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
-                            results.style.display = 'none';
-                            input.value = item.display_name;
-                        };
-                        results.appendChild(div);
-                    });
-                    results.style.display = 'block';
-                }
-            }, 500));
-        }
+  function switchLayer(type) {
+    if (currentLayer === type) return;
+    map.removeLayer(currentLayer === 'satellite' ? satelliteLayer : osmLayer);
+    (type === 'satellite' ? satelliteLayer : osmLayer).addTo(map);
+    currentLayer = type;
+    document.getElementById('btn-satellite').classList.toggle('active', type === 'satellite');
+    document.getElementById('btn-map').classList.toggle('active', type === 'map');
+  }
 
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
+  function toggleDraw(type) {
+    if (drawHandler) stopDrawing();
+
+    const opts = { shapeOptions: { color: '#3B6D11', weight: 3, fillColor: '#97C459', fillOpacity: 0.4 } };
+    if (type === 'polygon') {
+      drawHandler = new L.Draw.Polygon(map, opts);
+      document.getElementById('btn-polygon').classList.add('active');
+    } else {
+      drawHandler = new L.Draw.Rectangle(map, opts);
+      document.getElementById('btn-rect').classList.add('active');
+    }
+    drawHandler.enable();
+  }
+
+  function stopDrawing() {
+    if (drawHandler) { drawHandler.disable(); drawHandler = null; }
+    document.getElementById('btn-polygon').classList.remove('active');
+    document.getElementById('btn-rect').classList.remove('active');
+  }
+
+  function setupSearch() {
+    const input = document.getElementById('searchInput');
+    const results = document.getElementById('searchResults');
+
+    input.addEventListener('input', debounce(async (e) => {
+      const q = e.target.value.trim();
+      if (q.length < 3) { results.style.display = 'none'; return; }
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=br`);
+        const data = await res.json();
+        results.innerHTML = '';
+        if (data.length) {
+          data.slice(0, 5).forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'search-item';
+            div.textContent = item.display_name;
+            div.onclick = () => {
+              const lat = parseFloat(item.lat), lon = parseFloat(item.lon);
+              map.setView([lat, lon], 18);
+              document.getElementById('coords-value').textContent = `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+              results.style.display = 'none';
+              input.value = item.display_name;
             };
+            results.appendChild(div);
+          });
+          results.style.display = 'block';
         }
+      } catch (_) {}
+    }, 400));
+  }
 
-        function onDrawing() {
-            const layers = featureGroup.getLayers();
-            let totalArea = 0;
-            layers.forEach(layer => {
-                if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
-                    const latlngs = layer.getLatLngs()[0];
-                    totalArea += calculateArea(latlngs.map(ll => [ll.lat, ll.lng]));
-                }
-            });
+  function debounce(fn, ms) {
+    let t;
+    return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+  }
 
-            const plates = Math.floor(totalArea / 2);
-            document.getElementById('areaValue').textContent = totalArea.toFixed(2);
-            document.getElementById('platesValue').textContent = plates;
-            document.getElementById('powerValue').textContent = (plates * 0.4).toFixed(1);
-            document.getElementById('results').classList.add('visible');
-        }
+  function limpar() {
+    featureGroup.clearLayers();
+    document.getElementById('results-section').classList.remove('visible');
+    stopDrawing();
+  }
 
-        function calculateArea(coords) {
-            if (coords.length < 3) return 0;
-            const avgLat = coords.reduce((s, c) => s + c[0], 0) / coords.length;
-            const mLat = 111320;
-            const mLng = 111320 * Math.cos((avgLat * Math.PI) / 180);
-            let area = 0;
-            for (let i = 0; i < coords.length; i++) {
-                const j = (i + 1) % coords.length;
-                area += (coords[i][1] * mLng) * (coords[j][0] * mLat) - (coords[j][1] * mLng) * (coords[i][0] * mLat);
-            }
-            return Math.abs(area) / 2;
-        }
+  function resetar() {
+    limpar();
+    map.setView(MAP_CENTER, 18);
+  }
 
-        function clearDrawing() {
-            featureGroup.clearLayers();
-            document.getElementById('results').classList.remove('visible');
-            stopDrawing();
-        }
+  function calcularArea(coords) {
+    if (coords.length < 3) return 0;
+    const avgLat = coords.reduce((s, c) => s + c[0], 0) / coords.length;
+    const mLat = 111320;
+    const mLng = 111320 * Math.cos((avgLat * Math.PI) / 180);
+    let area = 0;
+    for (let i = 0; i < coords.length; i++) {
+      const j = (i + 1) % coords.length;
+      area += (coords[i][1] * mLng) * (coords[j][0] * mLat);
+      area -= (coords[j][1] * mLng) * (coords[i][0] * mLat);
+    }
+    return Math.abs(area) / 2;
+  }
 
-        function resetMap() {
-            clearDrawing();
-            map.setView(mapCenter, 18);
-            document.getElementById('locationCoords').textContent = `${mapCenter[0]}°, ${mapCenter[1]}°`;
-        }
-        
-        function switchLayer(type) {
-            const layers = window.mapLayers;
-            if (layers.current === type) return;
-            map.removeLayer(layers.current === 'satellite' ? layers.satellite : layers.map);
-            (type === 'satellite' ? layers.satellite : layers.map).addTo(map);
-            layers.current = type;
-            document.getElementById('btnSatellite').classList.toggle('active', type === 'satellite');
-            document.getElementById('btnMap').classList.toggle('active', type === 'map');
-        }
+  function atualizar() {
+    const layers = featureGroup.getLayers();
+    if (!layers.length) { document.getElementById('results-section').classList.remove('visible'); return; }
+    let total = 0;
+    layers.forEach(layer => {
+      if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+        total += calcularArea(layer.getLatLngs()[0].map(ll => [ll.lat, ll.lng]));
+      }
+    });
+    const plates = Math.floor(total / 2);
+    document.getElementById('area-value').textContent = total.toFixed(2);
+    document.getElementById('plates-value').textContent = plates;
+    document.getElementById('power-value').textContent = (plates * 0.4).toFixed(1);
+    document.getElementById('results-section').classList.add('visible');
+  }
 
-        window.onload = initMap;
-    </script>
+  window.addEventListener('load', initMap);
+</script>
 </body>
 </html>
