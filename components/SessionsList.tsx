@@ -11,6 +11,9 @@ export interface Session {
   viability: number;
   irradiation: number;
   status: 'excellent' | 'good' | 'moderate' | 'poor';
+  temperature?: number;
+  cloudiness?: number;
+  wind?: number;
 }
 
 interface SessionsListProps {
