@@ -106,6 +106,15 @@ export default function SunflowerDashboard() {
             <span className="text-[11px] font-black uppercase tracking-[0.15em]">Simulador ROI</span>
           </Link>
 
+          {/* Botão Mapeador de Telhado */}
+          <Link 
+            href="/mapeador" 
+            className="group relative flex items-center gap-2.5 bg-white border border-black/10 px-5 py-2.5 rounded-full shadow-sm hover:bg-gray-50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 hover:ring-2 hover:ring-offset-2 hover:ring-slate-200 active:scale-95 active:translate-y-0"
+          >
+            <MapPin size={16} className="text-sun-green-600 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-110 group-hover:text-sun-amber-500" />
+            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-sun-text">Mapeador de Telhado</span>
+          </Link>
+
           {/* Botão Central de Regiões */}
           <Link 
             href="/regions" 
