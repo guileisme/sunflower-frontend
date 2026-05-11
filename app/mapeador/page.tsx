@@ -14,7 +14,7 @@ export default function MapeadorPage() {
             <Home size={40} fill="currentColor" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight leading-none mb-1.5">Mapeador de Telhado</h1>
+            <h1 className="text-2xl font-black tracking-tight leading-none mb-1.5">Mapeador</h1>
             <p className="text-[10px] font-bold text-[#6b6a64] uppercase tracking-[0.3em] opacity-80">
               Calcule a Área Útil e Estime Placas Solares
             </p>
@@ -34,7 +34,7 @@ export default function MapeadorPage() {
           border: 'none',
           display: 'block'
         }}
-        title="Mapeador de Telhado Interativo"
+        title="Mapeador Interativo"
       />
     </main>
   );
