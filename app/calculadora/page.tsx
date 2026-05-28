@@ -13,7 +13,7 @@ import {
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
 const PVWATTS_API_KEY = "E17ff3qCxPwvb9b4zmVpJXaczB1upKRPHSWEaiZR";
-const PVWATTS_API_URL = "https://developer.nlr.gov/api/pvwatts/v8.json";
+const PVWATTS_API_URL = "https://developer.nrel.gov/api/pvwatts/v8.json";
 
 const MONTH_NAMES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -65,7 +65,7 @@ interface PVWattsStationInfo {
 }
 
 interface PVWattsResponse {
-  inputs: Record<string, any>;
+  inputs: Record<string, unknown>;
   errors: string[];
   warnings: string[];
   version: string;
@@ -363,8 +363,9 @@ export default function CalculadoraPage() {
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 200);
-    } catch (e: any) {
-      setError(`Falha ao conectar com a API PVWatts: ${e?.message || "Verifique sua conexão"}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Verifique sua conexão";
+      setError(`Falha ao conectar com a API PVWatts: ${message}`);
       setApiOnline(false);
     } finally {
       setLoading(false);
