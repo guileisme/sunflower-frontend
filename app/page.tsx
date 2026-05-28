@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Sun, MapPin, Zap, Cloud, Wind, Thermometer, ShieldCheck,
   Activity, FileText, TableProperties, Crosshair,
-  Globe, LayoutDashboard, Clock
+  Globe, LayoutDashboard, Clock, Calculator
 } from "lucide-react";
 
 import { EnergyChart } from "@/components/EnergyChart";
@@ -86,6 +86,7 @@ export default function SunflowerDashboard() {
             <NavLink href="/mapeador" icon={MapPin} label="Mapa" />
             <NavLink href="/regions" icon={Globe} label="Regiões" />
             <NavLink href="/simulador/economia" icon={TableProperties} label="ROI" />
+            <NavLink href="/calculadora" icon={Calculator} label="Calculadora" />
           </div>
 
           {/* Lado Direito: Ação de Relatório e Status */}
